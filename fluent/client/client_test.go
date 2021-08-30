@@ -86,7 +86,7 @@ var _ = Describe("Client", func() {
 			msg = protocol.MessageExt{
 				Tag:       "foo.bar",
 				Timestamp: protocol.EventTime{time.Now()},
-				Record: map[string]string{
+				Record: map[string]interface{}{
 					"first": "Eddie",
 					"last":  "Van Halen",
 				},

@@ -81,7 +81,7 @@ type EntryExt struct {
 	// Record is the actual event record - key-value pairs, keys are strings.
 	// At this point, we're using strings for the values as well, but we may
 	// want to make those interface{} or something more generic at some point.
-	Record map[string]string
+	Record map[string]interface{}
 }
 
 // EntryExt is the basic representation of an individual event.  The timestamp
@@ -94,7 +94,7 @@ type Entry struct {
 	// Record is the actual event record - key-value pairs, keys are strings.
 	// At this point, we're using strings for the values as well, but we may
 	// want to make those interface{} or something more generic at some point.
-	Record map[string]string
+	Record map[string]interface{}
 }
 
 type MessageOptions struct {
@@ -109,7 +109,7 @@ type Message struct {
 	// Tag is a dot-delimited string used to categorize events
 	Tag       string
 	Timestamp int64
-	Record    map[string]string
+	Record    map[string]interface{}
 	// Options - used to control server behavior.  Same as above, may need to
 	// switch to interface{} or similar at some point.
 	Options MessageOptions
@@ -120,21 +120,84 @@ type Message struct {
 type MessageExt struct {
 	Tag       string
 	Timestamp EventTime `msg:"eventTime,extension"`
-	Record    map[string]string
+	Record    map[string]interface{}
 	Options   MessageOptions
 }
 
 // ForwardMessage is used in Forward mode to send multiple events in a single
 // msgpack array within a single request.
 //msgp:tuple ForwardMessage
+//msgp:decode ignore ForwardMessage
+//msgp:unmarshal ignore ForwardMessage
 type ForwardMessage struct {
 	// Tag is a dot-delimted string used to categorize events
 	Tag string
 	// Entries is the set of event objects to be carried in this message
-	Entries []EntryExt
+	Entries EntryList
 	// Options - used to control server behavior.  Same as above, may need to
 	// switch to interface{} or similar at some point.
-	Options MessageOptions
+	Options *MessageOptions `msg:",omitempty"`
+}
+
+func (fm *ForwardMessage) DecodeMsg(dc *msgp.Reader) error {
+	sz, err := dc.ReadArrayHeader()
+	if err != nil {
+		return msgp.WrapError(err, "Array Header")
+	}
+
+	hasOpts := sz == 3
+
+	fm.Tag, err = dc.ReadString()
+	if err != nil {
+		return msgp.WrapError(err, "Tag")
+	}
+
+	fm.Entries = EntryList{}
+	if err = fm.Entries.DecodeMsg(dc); err != nil {
+		return err
+	}
+
+	if hasOpts {
+		fm.Options = &MessageOptions{}
+		if err = fm.Options.DecodeMsg(dc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (fm *ForwardMessage) UnmarshalMsg(bts []byte) ( []byte, error ) {
+	var (
+		sz  uint32
+		err error
+	)
+
+	sz, b, err := msgp.ReadArrayHeaderBytes(bts)
+	if err != nil {
+		return nil, msgp.WrapError(err, "Array Header")
+	}
+
+	hasOpts := sz == 3
+
+	fm.Tag, b, err = msgp.ReadStringBytes(b)
+	if err != nil {
+		return nil, msgp.WrapError(err, "Tag")
+	}
+
+	fm.Entries = EntryList{}
+	if b, err = fm.Entries.UnmarshalMsg(b); err != nil {
+		return nil, err
+	}
+
+	if hasOpts {
+		fm.Options = &MessageOptions{}
+		if _, err = fm.Options.UnmarshalMsg(b); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
 }
 
 // PackedForwardMessage is just like ForwardMessage, except that the events
