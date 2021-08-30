@@ -49,7 +49,7 @@ var _ = Describe("Transport", func() {
 			Expect(unment.Timestamp.Time.Equal(ent.Timestamp.Time)).To(BeTrue())
 		})
 
-		FIt("Ensure bin file is being read correctly", func() {
+		It("Ensure bin file is being read correctly", func() {
 			bits, err := ioutil.ReadFile("/Users/chriswolf/go/src/github.ibm.com/Observability/fluent-forward-go/forwarded_records.msgpack.bin")
 			Expect(err).ToNot(HaveOccurred())
 			// unmarshal bits to Forward message type
