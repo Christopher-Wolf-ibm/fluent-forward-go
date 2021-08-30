@@ -98,8 +98,8 @@ type Entry struct {
 }
 
 type MessageOptions struct {
-	Size int `msg:"size"`
-	Chunk string `msg:"chunk"`
+	Size       int    `msg:"size"`
+	Chunk      string `msg:"chunk"`
 	Compressed string `msg:"compressed"`
 }
 
@@ -167,7 +167,7 @@ func (fm *ForwardMessage) DecodeMsg(dc *msgp.Reader) error {
 	return nil
 }
 
-func (fm *ForwardMessage) UnmarshalMsg(bts []byte) ( []byte, error ) {
+func (fm *ForwardMessage) UnmarshalMsg(bts []byte) ([]byte, error) {
 	var (
 		sz  uint32
 		err error
@@ -175,29 +175,29 @@ func (fm *ForwardMessage) UnmarshalMsg(bts []byte) ( []byte, error ) {
 
 	sz, b, err := msgp.ReadArrayHeaderBytes(bts)
 	if err != nil {
-		return nil, msgp.WrapError(err, "Array Header")
+		return b, msgp.WrapError(err, "Array Header")
 	}
 
 	hasOpts := sz == 3
 
 	fm.Tag, b, err = msgp.ReadStringBytes(b)
 	if err != nil {
-		return nil, msgp.WrapError(err, "Tag")
+		return b, msgp.WrapError(err, "Tag")
 	}
 
 	fm.Entries = EntryList{}
 	if b, err = fm.Entries.UnmarshalMsg(b); err != nil {
-		return nil, err
+		return b, err
 	}
 
 	if hasOpts {
 		fm.Options = &MessageOptions{}
-		if _, err = fm.Options.UnmarshalMsg(b); err != nil {
-			return nil, err
+		if b, err = fm.Options.UnmarshalMsg(b); err != nil {
+			return b, err
 		}
 	}
 
-	return nil, nil
+	return b, nil
 }
 
 // PackedForwardMessage is just like ForwardMessage, except that the events
@@ -270,7 +270,7 @@ func NewPackedForwardMessage(
 	msg := &PackedForwardMessage{
 		Tag:         tag,
 		EventStream: eventStream(entries),
-		Options: opts,
+		Options:     opts,
 	}
 	return msg
 }
@@ -311,6 +311,6 @@ func NewCompressedPackedForwardMessage(
 	return &CompressedPackedForwardMessage{
 		Tag:                   tag,
 		CompressedEventStream: buf.Bytes(),
-		Options: opts,
+		Options:               opts,
 	}
 }

@@ -48,18 +48,19 @@ var _ = Describe("Transport", func() {
 
 			Expect(unment.Timestamp.Time.Equal(ent.Timestamp.Time)).To(BeTrue())
 		})
+	})
 
-		It("Ensure bin file is being read correctly", func() {
-			bits, err := ioutil.ReadFile("/Users/chriswolf/go/src/github.ibm.com/Observability/fluent-forward-go/forwarded_records.msgpack.bin")
+	Describe("ForwardMessage", func() {
+		It("Correctly unmarshals entries for a message without options field", func() {
+			bits, err := ioutil.ReadFile("./protocolfakes/forwarded_records.msgpack.bin")
 			Expect(err).ToNot(HaveOccurred())
-			// unmarshal bits to Forward message type
 
 			fwdmsg := ForwardMessage{}
 
-			// TODO: Why is this not returning a value and an error?
 			_, err = fwdmsg.UnmarshalMsg(bits)
-
 			Expect(err).NotTo(HaveOccurred())
+			Expect(len(fwdmsg.Entries)).To(Equal(2))
+			Expect(fwdmsg.Options).To(BeNil())
 		})
 	})
 
