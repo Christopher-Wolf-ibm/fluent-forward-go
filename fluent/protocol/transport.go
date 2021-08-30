@@ -98,9 +98,9 @@ type Entry struct {
 }
 
 type MessageOptions struct {
-	Size int `msg:"size"`
-	Chunk string `msg:"chunk"`
-	Compressed string `msg:"compressed"`
+	Size *int `msg:"size"`
+	Chunk *string `msg:"chunk"`
+	Compressed *string `msg:"compressed"`
 }
 
 // Message is used to send a single event at a time
@@ -112,7 +112,7 @@ type Message struct {
 	Record    map[string]string
 	// Options - used to control server behavior.  Same as above, may need to
 	// switch to interface{} or similar at some point.
-	Options MessageOptions
+	Options *MessageOptions
 }
 
 // MessageExt
@@ -121,7 +121,7 @@ type MessageExt struct {
 	Tag       string
 	Timestamp EventTime `msg:"eventTime,extension"`
 	Record    map[string]string
-	Options   MessageOptions
+	Options   *MessageOptions
 }
 
 // ForwardMessage is used in Forward mode to send multiple events in a single
@@ -134,7 +134,7 @@ type ForwardMessage struct {
 	Entries []EntryExt
 	// Options - used to control server behavior.  Same as above, may need to
 	// switch to interface{} or similar at some point.
-	Options MessageOptions
+	Options *MessageOptions
 }
 
 // PackedForwardMessage is just like ForwardMessage, except that the events
@@ -148,7 +148,7 @@ type PackedForwardMessage struct {
 	EventStream []byte
 	// Options - used to control server behavior.  Same as above, may need to
 	// switch to interface{} or similar at some point.
-	Options MessageOptions
+	Options *MessageOptions
 }
 
 type EntryList []EntryExt
@@ -199,10 +199,11 @@ func (e EntryList) Equal(e2 EntryList) bool {
 func NewPackedForwardMessage(
 	tag string,
 	entries EntryList,
-	opts MessageOptions,
+	opts *MessageOptions,
 ) *PackedForwardMessage {
 	// set the options size to be the number of entries
-	opts.Size = len(entries)
+	size := len(entries)
+	opts.Size = &size
 
 	msg := &PackedForwardMessage{
 		Tag:         tag,
@@ -233,12 +234,12 @@ func eventStream(entries EntryList) []byte {
 type CompressedPackedForwardMessage struct {
 	Tag                   string
 	CompressedEventStream []byte
-	Options               MessageOptions
+	Options               *MessageOptions
 }
 
 // TODO: This is not working correctly yet
 func NewCompressedPackedForwardMessage(
-	tag string, entries []EntryExt, opts MessageOptions,
+	tag string, entries []EntryExt, opts *MessageOptions,
 ) *CompressedPackedForwardMessage {
 	var buf bytes.Buffer
 	zw := gzip.NewWriter(&buf)
@@ -251,3 +252,4 @@ func NewCompressedPackedForwardMessage(
 		Options: opts,
 	}
 }
+

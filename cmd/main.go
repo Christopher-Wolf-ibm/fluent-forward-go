@@ -44,7 +44,7 @@ func main() {
 			"last":  "Gawain",
 			"enemy": "Green Knight",
 		},
-		Options: protocol.MessageOptions{},
+		Options: &protocol.MessageOptions{},
 	}
 
 	mne := protocol.MessageExt{
@@ -55,7 +55,7 @@ func main() {
 			"last":  "Gawain",
 			"enemy": "Green Knight",
 		},
-		Options: protocol.MessageOptions{},
+		Options: &protocol.MessageOptions{},
 	}
 
 	fwd := protocol.ForwardMessage{
@@ -78,14 +78,14 @@ func main() {
 				},
 			},
 		},
-		Options: protocol.MessageOptions{},
+		Options: &protocol.MessageOptions{},
 	}
 
 	packedFwd := protocol.NewPackedForwardMessage(tagVar+".packed", fwd.Entries,
-		protocol.MessageOptions{})
+		&protocol.MessageOptions{})
 
 	compressed := protocol.NewCompressedPackedForwardMessage(tagVar+".compressed",
-		fwd.Entries, protocol.MessageOptions{})
+		fwd.Entries, &protocol.MessageOptions{})
 
 	c.SendMessage(&msg)
 	c.SendMessage(&mne)

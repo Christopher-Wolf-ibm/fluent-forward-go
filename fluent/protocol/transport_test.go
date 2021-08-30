@@ -2,6 +2,7 @@ package protocol_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -46,6 +47,17 @@ var _ = Describe("Transport", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(unment.Timestamp.Time.Equal(ent.Timestamp.Time)).To(BeTrue())
+		})
+
+		FIt("Ensure bin file is being read correctly", func() {
+			bits, err := ioutil.ReadFile("/Users/chriswolf/go/src/github.ibm.com/Observability/fluent-forward-go/forwarded_records.msgpack.bin")
+			Expect(err).ToNot(HaveOccurred())
+			// unmarshal bits to Forward message type
+
+			fwdmsg := ForwardMessage{}
+			_, err = fwdmsg.UnmarshalMsg(bits)
+
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
@@ -129,7 +141,7 @@ var _ = Describe("Transport", func() {
 		var (
 			tag     string
 			entries EntryList
-			opts    MessageOptions
+			opts    *MessageOptions
 		)
 
 		BeforeEach(func() {
@@ -150,7 +162,7 @@ var _ = Describe("Transport", func() {
 					},
 				},
 			}
-			opts = MessageOptions{}
+			opts = &MessageOptions{}
 		})
 
 		It("Returns a PackedForwardMessage", func() {
@@ -161,7 +173,7 @@ var _ = Describe("Transport", func() {
 		It("Includes the number of events as the `size` option", func() {
 			msg := NewPackedForwardMessage(tag, entries, opts)
 			size := msg.Options.Size
-			Expect(size).To(Equal(len(entries)))
+			Expect(*size).To(Equal(len(entries)))
 		})
 
 		XIt("Correctly encodes the entries into a bytestream", func() {
@@ -182,7 +194,7 @@ var _ = Describe("Transport", func() {
 		var (
 			tag     string
 			entries []EntryExt
-			opts    MessageOptions
+			opts    *MessageOptions
 		)
 
 		BeforeEach(func() {
@@ -203,7 +215,7 @@ var _ = Describe("Transport", func() {
 					},
 				},
 			}
-			opts = MessageOptions{}
+			opts = &MessageOptions{}
 		})
 
 		It("Returns a message with a gzip-compressed event stream", func() {

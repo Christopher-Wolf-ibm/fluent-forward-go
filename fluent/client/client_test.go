@@ -90,7 +90,7 @@ var _ = Describe("Client", func() {
 					"first": "Eddie",
 					"last":  "Van Halen",
 				},
-				Options: protocol.MessageOptions{},
+				Options: &protocol.MessageOptions{},
 			}
 		})
 
